@@ -1,7 +1,8 @@
 import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'dart:math';
+import 'package:mario/my_theme_data.dart';
+import 'package:mario/widgets.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Home extends StatefulWidget {
   const Home({Key? key}) : super(key: key);
@@ -11,87 +12,43 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  double marioX = -.7;
-  double marioY = 1;
-  bool isJumping = false;
-  double monisterPosition = 1.5;
-  bool crashed = false;
-  moveMonister() {
-    //-2 -1.5 -1 -.5 0 .5 1 1.5 2
+  ///////////get the high score ////////////////
+  Future<SharedPreferences> prefrence = SharedPreferences.getInstance();
 
-    Timer.periodic(const Duration(milliseconds: 10), (timer) {
-      if (!crashed) {
-        if (monisterPosition.toStringAsExponential(1) ==
-            marioX.toStringAsExponential(1)) {
-          crashed = true;
-          setState(() {});
-          timer.cancel();
-        }
-        if (monisterPosition < -2.5) {
-          //start from right again
-          monisterPosition = 1.5;
-          setState(() {});
-        } else {
-          //did not achieve end
-          //.5 -.5=0
-          //-.5 -.5 = -1.0
-          monisterPosition = monisterPosition - .01; //1.5 1 .5 0 -.5 -1.0 -1.5
-          setState(() {});
-        }
-
-        print(monisterPosition);
+  late double higheScore;
+  String highScoreKey = 'highScore';
+  void getHighScore() async {
+    await prefrence.then((SharedPreferences pref) {
+      if (pref.containsKey(highScoreKey)) {
+        higheScore = pref.getDouble(highScoreKey)!;
+      } else {
+        pref.setDouble(highScoreKey, 0);
       }
+      return 0;
     });
   }
 
-  @override
-  void initState() {
-    super.initState();
-    moveMonister();
+  void changeHighScore() {
+    if (higheScore < score) {
+      higheScore = score;
+      prefrence.then((pref) => pref.setDouble(highScoreKey, score));
+    }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    print(2.0.toStringAsExponential(1));
-    double screenHeight = MediaQuery.of(context).size.height;
-    double screenWidth = MediaQuery.of(context).size.width;
-    move() async {
-      while (true) {
-        await Future.delayed(const Duration(milliseconds: 1000), () {
-          if (monisterPosition < -2.5) {
-            monisterPosition = 1.5;
-            setState(() {});
-          } else {
-            monisterPosition = monisterPosition - .01;
-            setState(() {});
-          }
-        });
+/////////////// mario  //////////////
+  double marioX = -.7;
+  double marioY = 1;
+  bool isJumping = false;
+  Future<void> backToGround() async {
+    await Future.delayed(const Duration(milliseconds: 500), () {
+      marioY += 1; //0 .2 .4 .6 .8 1
+      setState(() {});
+    });
+  }
 
-        print(monisterPosition);
-      }
-      //   return 0;
-    }
-
-    String generateMonister() {
-      int monisterNum = Random().nextInt(2);
-      List<String> monisterImgList = [
-        'assets/images/monister1.png',
-        'assets/images/monister2.png',
-      ];
-      // double monisterX = Random().nextDouble();
-
-      return monisterImgList[monisterNum];
-    }
-
-    //////////////jump functions///////////
-    Future<void> backToGround() async {
-      await Future.delayed(const Duration(milliseconds: 500), () {
-        marioY += 1; //0 .2 .4 .6 .8 1
-        setState(() {});
-      });
-    }
-
-    void jump() async {
+  void jump() async {
+    if (iscrashed) {
+    } else {
       isJumping = true;
       marioY = 0;
       setState(() {});
@@ -103,71 +60,191 @@ class _HomeState extends State<Home> {
         });
       });
     }
+  }
 
-///////////////widgets//////////////////
-    Image jumpImg() {
-      return Image.asset(
-        'assets/images/jump.png',
-        height: screenHeight * .1,
-      );
-    }
+  Image runImg(double screenHeight) {
+    isJumping = false;
+    setState(() {});
+    return Image.asset(
+      'assets/images/run.gif',
+      height: screenHeight * .15,
+    );
+  }
 
-    Image runImg() {
-      isJumping = false;
-      setState(() {});
-      return Image.asset(
-        'assets/images/run.gif',
-        height: screenHeight * .15,
-      );
-    }
+  ///////////// monster ////////////
+  double monsterPosition = 1.5;
+  bool iscrashed = false;
+  bool checkCrashing() {
+    return monsterPosition.toStringAsExponential(1) ==
+            marioX.toStringAsExponential(1) &&
+        !isJumping;
+  }
 
-    Widget greenSeperator(double screenHeight) {
-      return Container(
-        height: screenHeight * .02,
-        color: Colors.green,
-      );
-    }
+  int chances = 5;
+  bool chanceLost = false;
+  moveMonster() {
+    //-2 -1.5 -1 -.5 0 .5 1 1.5 2
+    Timer.periodic(const Duration(milliseconds: 10), (timer) async {
+      if (chanceLost) {}
+      if (checkCrashing()) {
+        changeHighScore();
+        chances--;
+        score = 0;
+        monsterPosition = 1.5;
+        chanceLost = true;
+        setState(() {});
+        if (chances == 0) {
+          iscrashed = true;
+          timer.cancel();
+        }
+        await Future.delayed(const Duration(milliseconds: 1000), () {});
+        chanceLost = false;
+      }
+      if (monsterPosition < -2.5) {
+        //start from right again
+        monsterPosition = 1.5;
+      } else {
+        //did not achieve end
+        monsterPosition = monsterPosition - .01; //1.5 1 .5 0 -.5 -1.0 -1.5
+        score += .02;
+        if (score > higheScore) {
+          higheScore += .02;
+        }
 
-    //  moveMonister();
-    return GestureDetector(
-      onTap: () {
-        jump();
-      },
-      child: Column(children: [
-        //blue
-        Expanded(
-          flex: 3,
-          child: Stack(
-            children: [
-              AnimatedContainer(
-                  duration: const Duration(milliseconds: 500),
-                  alignment: Alignment(marioX, marioY),
-                  color: Colors.blue,
-                  child: isJumping ? jumpImg() : runImg()),
-              Container(
-                  //    color: Colors.amber,
-                  width: screenWidth,
-                  //duration: const Duration(milliseconds: 10),
-                  alignment: Alignment(monisterPosition, 1),
-                  child: SizedBox(
-                    width: screenWidth * .15,
-                    height: screenHeight * .1,
-                    child: Image.asset(
-                        'assets/images/monister1.png' //generateMonister(),
-                        ),
-                  )),
-            ],
-          ),
+        setState(() {});
+      }
+    });
+  }
+
+  ////////////  player //////////////
+  double score = 0;
+  @override
+  void initState() {
+    super.initState();
+    moveMonster();
+    getHighScore();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double screenHeight = MediaQuery.of(context).size.height;
+    double screenWidth = MediaQuery.of(context).size.width;
+    Orientation screenOrientation = MediaQuery.of(context).orientation;
+
+    PreferredSizeWidget appBar() {
+      return AppBar(
+        backgroundColor: Colors.white,
+        title: Row(
+          children: [
+            //score
+            Expanded(
+              child: Text('score : ${score.toInt()}',
+                  textAlign: TextAlign.center,
+                  style: MyThemeData.scoreTextStyle(
+                      screenOrientation, screenWidth)),
+            ),
+            //high score
+            Expanded(
+              child: Text('High score : ${higheScore.toInt()}',
+                  textAlign: TextAlign.center,
+                  style: MyThemeData.scoreTextStyle(
+                      screenOrientation, screenWidth)),
+            ),
+            //heart
+            Stack(
+              alignment: AlignmentDirectional.center,
+              children: [
+                Icon(Icons.favorite,
+                    color: Colors.red,
+                    size:
+                        MyThemeData.heartSize(screenOrientation, screenWidth)),
+                Text(chances.toString(),
+                    textAlign: TextAlign.center,
+                    style: MyThemeData.insideHeartTextStyle())
+              ],
+            ),
+            SizedBox(
+              width: screenWidth * .05,
+            )
+          ],
         ),
-        //green
-        greenSeperator(screenHeight),
-        //brown
-        Expanded(
-          child: Container(
-            color: Colors.brown,
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: MyThemeData.blue,
+      appBar: appBar(),
+      body: GestureDetector(
+        onTap: () {
+          jump();
+        },
+        child: Column(children: [
+          //blue
+          Expanded(
+            flex: 3,
+            //mario and monster
+            child: Stack(
+              children: [
+                //mario img
+                AnimatedContainer(
+                    duration: const Duration(milliseconds: 500),
+                    alignment: Alignment(marioX, marioY),
+                    color: MyThemeData.blue,
+                    child: isJumping
+                        ? Widgets.jumpImg(screenHeight)
+                        : iscrashed
+                            ? Widgets.standImg(screenHeight)
+                            : runImg(screenHeight)),
+                //monster img
+                Container(
+                    alignment: Alignment(monsterPosition, 1),
+                    child: Widgets.monsterSizedBox(screenWidth, screenHeight)),
+                //try again
+                iscrashed
+                    ? Center(
+                        child: Container(
+                          alignment: const Alignment(0, 0),
+                          height: screenHeight * .2,
+                          width: screenWidth * .8,
+                          color: Colors.white,
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Widgets.gameOverText(
+                                  screenOrientation, screenWidth),
+                              MaterialButton(
+                                  color: const Color.fromARGB(255, 43, 186, 48),
+                                  onPressed: () {
+                                    iscrashed = false;
+                                    chances = 5;
+                                    moveMonster();
+                                  },
+                                  child: Widgets.TryAgainBTNtext(
+                                      screenOrientation, screenWidth))
+                            ],
+                          ),
+                        ),
+                      )
+                    : Container(),
+                chanceLost
+                    ? Center(
+                        child: Container(
+                            alignment: const Alignment(0, 0),
+                            height: screenHeight * .2,
+                            width: screenWidth * .8,
+                            color: Colors.white,
+                            child: Text('OOPS')),
+                      )
+                    : Container()
+              ],
+            ),
           ),
-        )
-      ]),
+          //green
+          Widgets.greenSeperator(screenHeight),
+          //brown
+          Widgets.brownArea
+        ]),
+      ),
     );
   }
 }
