@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mario/assets/constants.dart';
 
 import 'my_Theme_Data.dart';
 
@@ -11,14 +12,14 @@ abstract class Widgets {
 
   static Image jumpImg(double screenHeight) {
     return Image.asset(
-      'assets/images/jump.png',
+      Constants.jumpImg,
       height: screenHeight * .1,
     );
   }
 
   static Image standImg(double screenHeight) {
     return Image.asset(
-      'assets/images/stand.png',
+      Constants.stangImg,
       height: screenHeight * .12,
     );
   }
@@ -34,7 +35,8 @@ abstract class Widgets {
     return SizedBox(
       width: screenWidth * .15,
       height: screenHeight * .1,
-      child: Image.asset('assets/images/monister1.png' //generateMonister(),
+      child: Image.asset(Constants.monister1Img
+          //generateMonister(),
           ),
     );
   }
@@ -44,7 +46,7 @@ abstract class Widgets {
         style: MyThemeData.scoreTextStyle(screenOrientation, screenWidth));
   }
 
-  static Text TryAgainBTNtext(
+  static Text tryAgain(
       Orientation screenOrientation, double screenWidth) {
     return Text('Try Again',
         style: MyThemeData.scoreTextStyle(screenOrientation, screenWidth)
