@@ -1,16 +1,13 @@
-# mario
+MARIO GAME 
 
-A new Flutter project.
+Simple practice on animation and handling user interaction 
 
-## Getting Started
+Store high score in shared preferences
 
-This project is a starting point for a Flutter application.
+state management Provider 
 
-A few resources to get you started if this is your first Flutter project:
 
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
+https://drive.google.com/file/d/1NLBgskkeSWE8_u8nOFnwkPCAAeQ-9Tpa/view?usp=drivesdk
 
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+
+![Screenshot_20221217_161126](https://user-images.githubusercontent.com/91227030/208246139-d1f836bc-15fb-4824-83d5-4f7ea59046f4.jpg)
